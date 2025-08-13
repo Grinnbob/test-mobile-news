@@ -99,7 +99,7 @@ export const NewsList = () => {
       </div>
 
       <ul style={styles.list}>
-        {news.map((item) => {
+        {news.slice().reverse().map((item) => {
           const expanded = expandedCards[item.id] || false;
           const isLong = item.content.length > 120;
           const displayText = expanded
@@ -163,6 +163,8 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 auto",
     padding: 16,
     fontFamily: "system-ui, sans-serif",
+    backgroundColor: "#f3f4f6",
+    minHeight: "100vh",
   },
   title: {
     fontSize: "1.8rem",
@@ -199,6 +201,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 6,
     fontSize: "0.95rem",
     backgroundColor: "#fff",
+    color: "#000",
   },
   buttonRow: {
     display: "flex",
