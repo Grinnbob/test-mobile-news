@@ -101,7 +101,8 @@ export const NewsList = () => {
                 <img
                   src={fileData}
                   alt="Превью"
-                  style={{ maxWidth: "100%", borderRadius: 6 }}
+                  style={{ maxWidth: "100%", borderRadius: 6, maxHeight: 200, // ограничиваем высоту
+    objectFit: "cover", }}
                 />
                 <button
                   type="button"
