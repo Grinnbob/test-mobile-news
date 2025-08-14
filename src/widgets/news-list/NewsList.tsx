@@ -8,24 +8,37 @@ export const NewsList = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [fileData, setFileData] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>(
     {}
   );
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFileData(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = () => {
     if (!title.trim() || !content.trim()) return;
 
     if (editingId) {
-      editNews(editingId, title, content);
+      editNews(editingId, title, content, fileData);
       setEditingId(null);
     } else {
-      addNews(title, content);
+      addNews(title, content, fileData);
     }
 
     setTitle("");
     setContent("");
+    setFileData(null);
     setFormOpen(false);
   };
 
@@ -35,6 +48,7 @@ export const NewsList = () => {
     setEditingId(id);
     setTitle(item.title);
     setContent(item.content);
+    setFileData(item.image || null);
     setFormOpen(true);
   };
 
@@ -55,7 +69,7 @@ export const NewsList = () => {
       <div
         style={{
           ...styles.form,
-          maxHeight: formOpen ? 500 : 0,
+          maxHeight: formOpen ? 600 : 0,
           opacity: formOpen ? 1 : 0,
           padding: formOpen ? 16 : "0 16px",
           transition: "all 0.4s ease",
@@ -75,6 +89,39 @@ export const NewsList = () => {
               onChange={(e) => setContent(e.target.value)}
               style={{ ...styles.input, height: 80, resize: "none" }}
             />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={styles.input}
+            />
+
+            {fileData && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <img
+                  src={fileData}
+                  alt="Превью"
+                  style={{ maxWidth: "100%", borderRadius: 6 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setFileData(null)}
+                  style={{
+                    padding: "4px 8px",
+                    border: "none",
+                    borderRadius: 4,
+                    backgroundColor: "#fecaca",
+                    color: "#7f1d1d",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  Удалить изображение
+                </button>
+              </div>
+            )}
+
             <div style={styles.buttonRow}>
               <button
                 style={{ ...styles.button, backgroundColor: "#f9a8d4" }}
@@ -89,6 +136,7 @@ export const NewsList = () => {
                   setEditingId(null);
                   setTitle("");
                   setContent("");
+                  setFileData(null);
                 }}
               >
                 Скрыть
@@ -99,59 +147,66 @@ export const NewsList = () => {
       </div>
 
       <ul style={styles.list}>
-        {news.slice().reverse().map((item) => {
-          const expanded = expandedCards[item.id] || false;
-          const isLong = item.content.length > 120;
-          const displayText = expanded
-            ? item.content
-            : isLong
-            ? item.content.slice(0, 120) + "..."
-            : item.content;
+        {news
+          .slice()
+          .reverse()
+          .map((item) => {
+            const expanded = expandedCards[item.id] || false;
+            const isLong = item.content.length > 120;
+            const displayText = expanded
+              ? item.content
+              : isLong
+              ? item.content.slice(0, 120) + "..."
+              : item.content;
 
-          return (
-            <li key={item.id} style={styles.card}>
-              <div style={styles.cardTopBar}>
-                <button
-                  style={styles.iconButton}
-                  onClick={() => startEditing(item.id)}
-                  title="Редактировать"
-                >
-                  ✏️
-                </button>
-                <button
-                  style={styles.iconButton}
-                  onClick={() => deleteNews(item.id)}
-                  title="Удалить"
-                >
-                  ❌
-                </button>
-              </div>
+            return (
+              <li key={item.id} style={styles.card}>
+                <div style={styles.cardTopBar}>
+                  <button
+                    style={styles.iconButton}
+                    onClick={() => startEditing(item.id)}
+                    title="Редактировать"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    style={styles.iconButton}
+                    onClick={() => deleteNews(item.id)}
+                    title="Удалить"
+                  >
+                    ❌
+                  </button>
+                </div>
 
-              <h3 style={styles.cardTitle}>{item.title}</h3>
-              <p
-                style={{
-                  ...styles.cardText,
-                  transition: "all 0.3s ease",
-                }}
-              >
-                {displayText}
-              </p>
-              {isLong && (
-                <button
-                  style={styles.showMoreButton}
-                  onClick={() => toggleExpand(item.id)}
-                >
-                  {expanded ? "Скрыть" : "Показать полностью"}
-                </button>
-              )}
-              <div style={styles.cardBottomBar}>
-                <span style={styles.cardDate}>
-                  {new Date(item.date).toLocaleString()}
-                </span>
-              </div>
-            </li>
-          );
-        })}
+                <h3 style={styles.cardTitle}>{item.title}</h3>
+                {item.image && (
+                  <img
+                    src={item.image}
+                    alt="Новость"
+                    style={{
+                      maxWidth: "100%",
+                      borderRadius: 6,
+                      marginBottom: 8,
+                    }}
+                  />
+                )}
+                <p style={styles.cardText}>{displayText}</p>
+                {isLong && (
+                  <button
+                    style={styles.showMoreButton}
+                    onClick={() => toggleExpand(item.id)}
+                  >
+                    {expanded ? "Скрыть" : "Показать полностью"}
+                  </button>
+                )}
+                <div style={styles.cardBottomBar}>
+                  <span style={styles.cardDate}>
+                    {new Date(item.date).toLocaleString()}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
       </ul>
     </div>
   );
